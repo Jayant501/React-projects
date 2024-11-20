@@ -1,85 +1,98 @@
-import { useState } from 'react'
-import { InputBox } from './components'
-import useCurrencyInfo from './hooks/useCurrencyInfo.js'
-import { useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 
 function App() {
-  const [amount, setAmount] = useState(0)
-  const [from, setFrom] = useState("usd")
-  const [to, setTo] = useState("inr")
-  const [convertedAmount, setConvertedAmount] = useState(0)
 
-  const currencyInfo = useCurrencyInfo(from)
+  const [length,setLength] = useState(8);
+  const [numAllow,setnumAllow] = useState(false);
+  const [charAllow,setcharAllow] = useState(false);
+  const [password,setPassword] = useState('');
 
-  const options = Object.keys(currencyInfo)
+  //useRef hook
+  const passwordRef = useRef(null)
 
-  useEffect(() =>{
-    console.log(currencyInfo)
-  }, [])
+  const passwordGenerator = useCallback(() => {
+    let pass = ''
+    let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    if(numAllow){
+      str += '0123456789'
+    }
+    if (charAllow){
+      str += '!@#$%^&*+-/'
+    }
 
-  const swap = () => {
-    setFrom(to)
-    setTo(from)
-    setConvertedAmount(amount)
-    setAmount(convertedAmount)
-  }
+    for (let i = 0; i <= length; i++) {
+      let char = Math.floor(Math.random() * str.length + 1)
+      pass += str.charAt(char)
+    }
 
-  const convert = () => {
-    setConvertedAmount(amount * currencyInfo[to])
-  }
+    setPassword(pass)
+
+  }, [length, numAllow, charAllow, setPassword])
+  
+
+  //copy the generated password to the clipboard
+  const copyPasswordToClipboard = useCallback(() => {
+    passwordRef.current?.select()
+    passwordRef.currrent?.setSelectionRange(0,99)
+    window.navigator.clipboard.writeText(password)
+  }, [password])
+
+  useEffect(() => {
+    passwordGenerator()},
+    [length, numAllow, charAllow, passwordGenerator])
 
   return (
     <>
-      <div
-            className="w-full h-screen flex flex-wrap justify-center items-center bg-cover bg-no-repeat"
-            style={{
-                backgroundImage: `url('https://images.pexels.com/photos/440731/pexels-photo-440731.jpeg?auto=compress&cs=tinysrgb&w=600')`,
-            }}
-        >
-            <div className="w-full">
-                <div className="w-full max-w-md mx-auto border border-gray-60 rounded-lg p-5 backdrop-blur-sm bg-white/30">
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            convert()
-                        }}
-                    >
-                        <div className="w-full mb-1">
-                            <InputBox
-                                label="From"
-                                amount={amount}
-                                currencyOptions={options}
-                                onCurrencyChange={(currency) => setFrom(currency)}
-                                onAmountChange={(amount) => setAmount(amount)}
-                                selectCurrency={from}
-                            />
-                        </div>
-                        <div className="relative w-full h-0.5">
-                            <button
-                                type="button"
-                                className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-white rounded-md bg-blue-600 text-white px-2 py-0.5"
-                                onClick={swap}
-                            >
-                                swap
-                            </button>
-                        </div>
-                        <div className="w-full mt-1 mb-4">
-                            <InputBox
-                                label="To"
-                                amount={convertedAmount}
-                                currencyOptions={options}
-                                onCurrencyChange={(currency) => setTo(currency)}
-                                selectCurrency={to}
-                                amountDisable
-                            />
-                        </div>
-                        <button type="submit" className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg" onClick={convert}>
-                            Convert {from.toUpperCase()} to {to.toUpperCase()}
-                        </button>
-                    </form>
-                </div>
-            </div>
+      <div className='w-full max-w-md mx-auto shadow-md rounded-lg px-4 my-10 text-orange-500 bg-gray-700'>
+        <h1 className='text-white text-center pt-2'>password Generator</h1>
+        <div className='flex shadow bg-white rounded-lg overflow-hidden my-4'>
+          <input 
+            type="text"
+            value={password}
+            className='outline-none w-full py-1 px-3'
+            placeholder='password'
+            readOnly
+            ref={passwordRef}
+          />
+          <button 
+          onClick={copyPasswordToClipboard}
+          className='outline-none bg-blue-700 hover:bg-blue-600 text-white px-3 py-0.5 shrink-0'
+          >copy</button>
+
         </div>
+
+        <div className='flex text-sm gap-x-2'>
+          <div className='flex items-center mb-2 gap-x-1'>
+            <input 
+            type="range"
+            min={8}
+            max={100}
+            value={length}
+            className='cursor-pointer'
+            onChange={(e) => {setLength(e.target.value)}}
+            />
+            <label>Length: {length}</label>
+          </div>
+          <div className='flex items-center mb-2 gap-x-1'>
+            <input 
+            type="checkbox"
+            defaultChecked={numAllow}
+            id='numInput'
+            onChange={() => {setnumAllow((prev) => !prev )}}
+            />
+            <label>Numbers</label>
+          </div>
+          <div className='flex items-center mb-2 gap-x-1'>
+            <input 
+            type="checkbox"
+            defaultChecked={charAllow}
+            id='charInput'
+            onChange={() => {setcharAllow((prev) => !prev )}}
+            />
+            <label>Characters</label>
+          </div>
+        </div>
+      </div>
     </>
   )
 }
