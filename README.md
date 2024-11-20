@@ -1,1 +1,1 @@
-Here i have created a Counter Project using ReactJS.
+Here i have created a different Projects using ReactJS.
